@@ -1,0 +1,66 @@
+.s-json-schema-form {
+  .s-json-schema-form_values {
+  }
+
+  .s-json-schema-form_values-item {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .s-json-schema-form_values-array,
+  .s-json-schema-form_values-object {
+    width: 100%;
+  }
+
+  .s-json-schema-form_values-prop:has(+ .s-json-schema-form_values-array),
+  .s-json-schema-form_values-prop:has(+ .s-json-schema-form_values-object),
+  .s-json-schema-form_values-index {
+    flex-shrink: 0;
+    flex-grow: 1;
+  }
+  .s-json-schema-form_values-index {
+  }
+  .s-json-schema-form_values-prop:has(+ .s-json-schema-form_values-array),
+  .s-json-schema-form_values-prop:has(+ .s-json-schema-form_values-object) {
+  }
+
+  /* .s-json-schema-form_values-item:has(.s-carpenter-wysiwyg-widget) {
+    .s-json-schema-form_values-prop {
+      width: 100%;
+      text-align: left;
+    }
+  } */
+
+  .s-json-schema-form_values-errors {
+  }
+  .s-json-schema-form_values-error {
+  }
+
+  .s-json-schema-form_values-prop {
+    flex-shrink: 0;
+  }
+  .s-json-schema-form_values-value {
+    flex-grow: 1;
+
+    &:has(.s-json-schema-form_values-errors) {
+    }
+
+    .-null,
+    .-undefined,
+    .-number,
+    .-true,
+    .-false {
+    }
+
+    .-null {
+    }
+    .-undefined {
+    }
+    .-number {
+    }
+    .-true {
+    }
+    .-false {
+    }
+  }
+}
