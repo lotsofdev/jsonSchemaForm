@@ -1,8 +1,8 @@
-import __LitElement from '@lotsof/litElement';
+import __LitElement from '@lotsof/lit-element';
 
 import { Draft, Draft2019, JsonError } from 'json-schema-library';
 
-import '../components/wysiwygWidget/wysiwygWidget.js';
+// import '../components/wysiwygWidget/wysiwygWidget.js';
 
 import { html } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -12,13 +12,13 @@ import { __deepMap, __get, __set } from '@lotsof/sugar/object';
 
 import '../../src/css/JsonSchemaFormElement.bare.css';
 import {
-  IJsonSchemaFormUpdateObject,
-  IJsonSchemaFormWidget,
+  TJsonSchemaFormUpdateObject,
+  TJsonSchemaFormWidget,
 } from '../shared/JsonSchemaForm.types.js';
 
 export default class JsonSchemaFormElement extends __LitElement {
-  public static widgets: Record<string, IJsonSchemaFormWidget> = {};
-  public static registerWidget(widget: IJsonSchemaFormWidget): void {
+  public static widgets: Record<string, TJsonSchemaFormWidget> = {};
+  public static registerWidget(widget: TJsonSchemaFormWidget): void {
     this.widgets[widget.id] = widget;
   }
 
@@ -32,12 +32,12 @@ export default class JsonSchemaFormElement extends __LitElement {
   accessor classPrefix: string = 's-json-schema-form';
 
   @property({ type: Object })
-  accessor widgets: Record<string, IJsonSchemaFormWidget> = {};
+  accessor widgets: Record<string, TJsonSchemaFormWidget> = {};
 
-  private _registeredWidgets: Record<string, IJsonSchemaFormWidget> = {};
+  private _registeredWidgets: Record<string, TJsonSchemaFormWidget> = {};
 
   constructor() {
-    super();
+    super('json-schema-form');
   }
 
   async mount() {
@@ -201,7 +201,7 @@ export default class JsonSchemaFormElement extends __LitElement {
   }
 
   private async _emitUpdate(
-    update: IJsonSchemaFormUpdateObject,
+    update: TJsonSchemaFormUpdateObject,
   ): Promise<void> {
     // dispatch the update
     this.dispatch('update', {

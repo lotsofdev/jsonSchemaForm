@@ -1,4 +1,4 @@
-import __LitElement from '@lotsof/litElement';
+import __LitElement from '@lotsof/lit-element';
 import { PropertyValues } from 'lit';
 import '../../../src/components/wysiwygWidget/wysiwygWidget.css';
 export default class CarpenterWysiwygWidget extends __LitElement {

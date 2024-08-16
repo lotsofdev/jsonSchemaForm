@@ -25,9 +25,9 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
 var _JsonSchemaFormElement_schema_accessor_storage, _JsonSchemaFormElement_values_accessor_storage, _JsonSchemaFormElement_classPrefix_accessor_storage, _JsonSchemaFormElement_widgets_accessor_storage;
-import __LitElement from '@lotsof/litElement';
+import __LitElement from '@lotsof/lit-element';
 import { Draft2019 } from 'json-schema-library';
-import '../components/wysiwygWidget/wysiwygWidget.js';
+// import '../components/wysiwygWidget/wysiwygWidget.js';
 import { html } from 'lit';
 import { property } from 'lit/decorators.js';
 import { literal, html as staticHtml, unsafeStatic } from 'lit/static-html.js';
@@ -46,7 +46,7 @@ class JsonSchemaFormElement extends __LitElement {
     get widgets() { return __classPrivateFieldGet(this, _JsonSchemaFormElement_widgets_accessor_storage, "f"); }
     set widgets(value) { __classPrivateFieldSet(this, _JsonSchemaFormElement_widgets_accessor_storage, value, "f"); }
     constructor() {
-        super();
+        super('json-schema-form');
         _JsonSchemaFormElement_schema_accessor_storage.set(this, {});
         _JsonSchemaFormElement_values_accessor_storage.set(this, {});
         _JsonSchemaFormElement_classPrefix_accessor_storage.set(this, 's-json-schema-form');

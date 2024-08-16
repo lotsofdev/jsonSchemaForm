@@ -13,7 +13,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import __LitElement from '@lotsof/litElement';
+import __LitElement from '@lotsof/lit-element';
 import __EditorJS from '@editorjs/editorjs';
 import __Embed from '@editorjs/embed';
 import __Header from '@editorjs/header';

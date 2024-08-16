@@ -1,15 +1,15 @@
-export interface IJsonSchemaFormSettings {
+export type TJsonSchemaFormSettings = {
     classPrefix: string;
-}
-export interface IJsonSchemaFormUpdateEvent {
+};
+export type TJsonSchemaFormUpdateEvent = {
     values: any;
-    update: IJsonSchemaFormUpdateObject;
-}
-export interface IJsonSchemaFormUpdateObject {
+    update: TJsonSchemaFormUpdateObject;
+};
+export type TJsonSchemaFormUpdateObject = {
     path: string[];
     value: any;
-}
-export interface IJsonSchemaFormWidget {
+};
+export type TJsonSchemaFormWidget = {
     id: string;
     tag: string;
-}
+};

@@ -1,14 +1,13 @@
-import __LitElement from '@lotsof/litElement';
-import '../components/wysiwygWidget/wysiwygWidget.js';
+import __LitElement from '@lotsof/lit-element';
 import '../../src/css/JsonSchemaFormElement.bare.css';
-import { IJsonSchemaFormWidget } from '../shared/JsonSchemaForm.types.js';
+import { TJsonSchemaFormWidget } from '../shared/JsonSchemaForm.types.js';
 export default class JsonSchemaFormElement extends __LitElement {
-    static widgets: Record<string, IJsonSchemaFormWidget>;
-    static registerWidget(widget: IJsonSchemaFormWidget): void;
+    static widgets: Record<string, TJsonSchemaFormWidget>;
+    static registerWidget(widget: TJsonSchemaFormWidget): void;
     accessor schema: any;
     accessor values: any;
     accessor classPrefix: string;
-    accessor widgets: Record<string, IJsonSchemaFormWidget>;
+    accessor widgets: Record<string, TJsonSchemaFormWidget>;
     private _registeredWidgets;
     constructor();
     mount(): Promise<void>;
