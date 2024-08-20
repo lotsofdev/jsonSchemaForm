@@ -28,16 +28,21 @@ export default class JsonSchemaFormElement extends __LitElement {
   @property({ type: Object })
   accessor values: any = {};
 
-  @property({ type: String })
-  accessor classPrefix: string = 's-json-schema-form';
+  @property({ type: Boolean })
+  accessor formClasses: boolean = false;
+
+  @property()
+  accessor buttonClasses: boolean | string = false;
 
   @property({ type: Object })
   accessor widgets: Record<string, TJsonSchemaFormWidget> = {};
 
   private _registeredWidgets: Record<string, TJsonSchemaFormWidget> = {};
 
+  private _errorsByPath: Record<string, JsonError[]> = {};
+
   constructor() {
-    super('json-schema-form');
+    super('s-json-schema-form');
   }
 
   async mount() {
@@ -75,7 +80,11 @@ export default class JsonSchemaFormElement extends __LitElement {
     return errors;
   }
 
-  private _renderComponentValueErrors(errors: JsonError[]): any {
+  private _renderComponentValueErrors(path: string[]): any {
+    const errors = this._errorsByPath[path.join('.')] ?? [];
+
+    if (!errors.length) return '';
+
     return html`
       <ul class=${this.cls('_values-errors')}>
         ${errors.map(
@@ -111,14 +120,20 @@ export default class JsonSchemaFormElement extends __LitElement {
     let renderedErrors = '';
     const errors = this._validateValues(schema, value);
     if (errors.length) {
-      renderedErrors = this._renderComponentValueErrors(errors);
+      this._errorsByPath[path.join('.')] = errors;
+      this.requestUpdate();
+    } else {
+      delete this._errorsByPath[path.join('.')];
     }
 
     if (schema) {
       switch (true) {
         case schema.enum !== undefined:
           return html`<select
-              class=${`${this.cls('_values-select')} form-select`}
+              id="${this.getIdFromPath(path)}"
+              class=${`${this.cls('_values-select')} ${
+                this.formClasses ? 'form-select' : ''
+              }`}
               @change=${(e) => {
                 __set(this.values, path, e.target.value);
                 this._emitUpdate({
@@ -137,26 +152,32 @@ export default class JsonSchemaFormElement extends __LitElement {
           break;
         case schema.type === 'string':
           return html`<input
-              type="text"
-              .value=${value ?? ''}
-              class=${this.cls('_values-input')}
-              @input=${(e: any) => {
-                __set(this.values, path, e.target.value);
-              }}
-              @change=${(e) => {
-                this._emitUpdate({
-                  value: e.target.value,
-                  path,
-                });
-              }}
-            />
-            ${renderedErrors} `;
+            type="text"
+            .value=${value ?? ''}
+            id="${this.getIdFromPath(path)}"
+            class=${`${this.cls('_values-input')} ${
+              this.formClasses ? 'form-input' : ''
+            }`}
+            placeholder=${schema.placeholder ?? ''}
+            @input=${(e: any) => {
+              __set(this.values, path, e.target.value);
+            }}
+            @change=${(e) => {
+              this._emitUpdate({
+                value: e.target.value,
+                path,
+              });
+            }}
+          />`;
           break;
         case schema.type === 'boolean':
           return html`<input
             type="checkbox"
             .checked=${value}
-            class=${`${this.cls('_values-checkbox')} form-checkbox`}
+            id="${this.getIdFromPath(path)}"
+            class=${`${this.cls('_values-checkbox')} ${
+              this.formClasses ? 'form-checkbox' : ''
+            }`}
             @change=${(e) => {
               __set(this.values, path, e.target.checked);
               this._emitUpdate({
@@ -172,7 +193,10 @@ export default class JsonSchemaFormElement extends __LitElement {
             .value=${value}
             min=${schema.minimum}
             max=${schema.maximum}
-            class=${`${this.cls('_values-input')} form-input form-number`}
+            id="${this.getIdFromPath(path)}"
+            class=${`${this.cls('_values-input')} ${
+              this.formClasses ? 'form-input form-number' : ''
+            }`}
             @input=${(e: any) => {
               __set(this.values, path, parseFloat(e.target.value));
             }}
@@ -256,6 +280,10 @@ export default class JsonSchemaFormElement extends __LitElement {
     return newValues;
   }
 
+  public getIdFromPath(path: string[]): string {
+    return `${this.tagName.toLowerCase()}-value-${path.join('-')}`;
+  }
+
   private _renderComponentValuesPreview(schema: any, path: string[] = []): any {
     // get the values for the current path
     const values = __get(this.values, path);
@@ -285,22 +313,47 @@ export default class JsonSchemaFormElement extends __LitElement {
       case schema.type === 'object' && schema.properties !== undefined:
         return html`
           <ul class=${this.cls('_values-object')}>
-            ${Object.entries(schema.properties).map(
-              ([key, value]) => html`
-                <li class=${this.cls('_values-item')}>
-                  <div
-                    class=${this.cls('_values-prop')}
-                    style="--prop-length: ${key.length}"
-                  >
-                    ${(<any>value).title ?? key}
-                  </div>
-                  ${this._renderComponentValuesPreview(schema.properties[key], [
-                    ...path,
-                    key,
-                  ])}
-                </li>
-              `,
-            )}
+            ${Object.entries(schema.properties).map(([key, value]) => {
+              if (value.type === 'object') {
+                return html`
+                  <li class=${this.cls('_values-object-item')}>
+                    <header class="${this.cls('_values-object-item-header')}">
+                      <h3 class="${this.cls('_values-object-item-title')}">
+                        ${(<any>value).title ?? key}
+                      </h3>
+                    </header>
+                    ${this._renderComponentValuesPreview(
+                      schema.properties[key],
+                      [...path, key],
+                    )}
+                    ${this._renderComponentValueErrors([...path, key])}
+                  </li>
+                `;
+              } else {
+                return html`
+                  <li class=${this.cls('_values-item _values-item-object')}>
+                    <label
+                      for="${this.getIdFromPath([...path, key])}"
+                      class="${this.cls('_values-label')} ${this.formClasses
+                        ? 'form-label'
+                        : ''}"
+                    >
+                      <div
+                        class=${this.cls('_values-prop')}
+                        style="--prop-length: ${key.length}"
+                      >
+                        ${(<any>value).title ?? key}
+                      </div>
+                    </label>
+                    ${this._renderComponentValuesPreview(
+                      schema.properties[key],
+                      [...path, key],
+                    )}
+                    ${this._renderComponentValueErrors([...path, key])}
+                  </li>
+                `;
+              }
+            })}
           </ul>
         `;
         break;
@@ -310,17 +363,39 @@ export default class JsonSchemaFormElement extends __LitElement {
             ${values?.length &&
             values.map(
               (value, i) => html`
-                <li class=${this.cls('_values-item')}>
-                  <div class=${this.cls('_values-index')}>${i}</div>
+                <li class=${this.cls('_values-array-item')}>
+                  <div class=${this.cls('_values-array-item-header')}>
+                    ${value.id
+                      ? html`
+                          <h3 class="${this.cls('_values-array-item-index')}">
+                            ${i}
+                          </h3>
+                          <h4 class="${this.cls('_values-array-item-id')}">
+                            ${value.id}
+                          </h4>
+                        `
+                      : html`
+                          <span class="${this.cls('_values-array-item-index')}"
+                            >${i}</span
+                          >
+                        `}
+                  </div>
                   ${this._renderComponentValuesPreview(schema.items, [
                     ...path,
                     `${i}`,
                   ])}
+                  ${this._renderComponentValueErrors([...path, `${i}`])}
                 </li>
               `,
             )}
             <button
-              class=${this.cls('_values-add')}
+              class=${`${this.cls('_values-add')} ${
+                this.buttonClasses === true
+                  ? 'button -outline'
+                  : typeof this.buttonClasses === 'string'
+                  ? this.buttonClasses
+                  : ''
+              }`}
               @click=${() => {
                 const newValues = this._createComponentDefaultValuesFromSchema(
                   schema.items,
@@ -333,7 +408,7 @@ export default class JsonSchemaFormElement extends __LitElement {
                 this.requestUpdate();
               }}
             >
-              Add
+              Add a ${schema.items.title?.toLowerCase() ?? 'new item'}
             </button>
           </ul>
         `;
@@ -349,11 +424,9 @@ export default class JsonSchemaFormElement extends __LitElement {
   }
 
   protected render() {
-    console.log('SSS', this.schema);
-
     if (this.schema) {
       return html`
-        <div class=${this.cls('_component')}>
+        <div class=${this.cls('_inner')}>
           <div class=${this.cls('_values')}>
             ${this._renderComponentValuesPreview(this.schema)}
           </div>

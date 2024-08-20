@@ -6,9 +6,11 @@ export default class JsonSchemaFormElement extends __LitElement {
     static registerWidget(widget: TJsonSchemaFormWidget): void;
     accessor schema: any;
     accessor values: any;
-    accessor classPrefix: string;
+    accessor formClasses: boolean;
+    accessor buttonClasses: boolean | string;
     accessor widgets: Record<string, TJsonSchemaFormWidget>;
     private _registeredWidgets;
+    private _errorsByPath;
     constructor();
     mount(): Promise<void>;
     private _findInSchema;
@@ -17,6 +19,7 @@ export default class JsonSchemaFormElement extends __LitElement {
     private _renderComponentValueEditWidget;
     private _emitUpdate;
     private _createComponentDefaultValuesFromSchema;
+    getIdFromPath(path: string[]): string;
     private _renderComponentValuesPreview;
     protected render(): import("lit-html").TemplateResult<1> | undefined;
 }
