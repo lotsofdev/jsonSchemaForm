@@ -4,7 +4,7 @@ import { Draft, Draft2019, JsonError } from 'json-schema-library';
 
 // import '../components/wysiwygWidget/wysiwygWidget.js';
 
-import { html } from 'lit';
+import { html, nothing, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { literal, html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
@@ -45,6 +45,11 @@ export default class JsonSchemaFormElement extends __LitElement {
     super('s-json-schema-form');
   }
 
+  public get $form(): HTMLFormElement | null {
+    const $field = this.querySelector('input, select, textarea') as any;
+    return $field?.form ?? null;
+  }
+
   async mount() {
     // handle the widgets
     this._registeredWidgets = {
@@ -54,6 +59,43 @@ export default class JsonSchemaFormElement extends __LitElement {
       },
       ...this.widgets,
       ...JsonSchemaFormElement.widgets,
+    };
+  }
+
+  protected update(changedProperties: PropertyValues): void {
+    super.update(changedProperties);
+
+    // handle the "-invalid" class on the form
+    if (this.$form) {
+      if (this.$form.checkValidity()) {
+        this.$form.classList.remove('-invalid');
+      } else {
+        this.$form.classList.add('-invalid');
+      }
+    }
+  }
+
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    // handle form submit.
+    // this will prevent the form to be submitted if
+    // any field is invalid
+    this._handleFormSubmit();
+  }
+
+  private _handleFormSubmit(): void {
+    const $form = this.$form;
+    if (!$form) return;
+    // override the "checkValidity" method to check
+    // if there's any errors in the form
+    const originalCheck = $form.checkValidity;
+    $form.checkValidity = () => {
+      if (!originalCheck.call($form)) {
+        return false;
+      }
+      if (Object.keys(this._errorsByPath).length) {
+        return false;
+      }
+      return true;
     };
   }
 
@@ -86,10 +128,10 @@ export default class JsonSchemaFormElement extends __LitElement {
     if (!errors.length) return '';
 
     return html`
-      <ul class=${this.cls('_values-errors')}>
+      <ul class=${`${this.cls('_values-errors')} errors`}>
         ${errors.map(
           (error) => html`
-            <li class=${this.cls('_values-error')}>
+            <li class=${`${this.cls('_values-error error')} error`}>
               ${error.message
                 .replace('in `#`', '')
                 .replace('at `#`', '')
@@ -109,6 +151,9 @@ export default class JsonSchemaFormElement extends __LitElement {
 
     // get the schema for the current path
     const schema = this._findInSchema(this.schema, pathWithoutIndexes);
+
+    // get the field name
+    const fieldName = path[path.length - 1];
 
     // handle default value
     if (value === null && schema.default !== undefined) {
@@ -131,9 +176,11 @@ export default class JsonSchemaFormElement extends __LitElement {
         case schema.enum !== undefined:
           return html`<select
               id="${this.getIdFromPath(path)}"
+              name=${fieldName}
               class=${`${this.cls('_values-select')} ${
                 this.formClasses ? 'form-select' : ''
               }`}
+              autofocus=${schema.autofocus ?? nothing}
               @change=${(e) => {
                 __set(this.values, path, e.target.value);
                 this._emitUpdate({
@@ -153,11 +200,13 @@ export default class JsonSchemaFormElement extends __LitElement {
         case schema.type === 'string':
           return html`<input
             type="text"
+            name=${fieldName}
             .value=${value ?? ''}
             id="${this.getIdFromPath(path)}"
             class=${`${this.cls('_values-input')} ${
               this.formClasses ? 'form-input' : ''
             }`}
+            autofocus=${schema.autofocus ?? nothing}
             placeholder=${schema.placeholder ?? ''}
             @input=${(e: any) => {
               __set(this.values, path, e.target.value);
@@ -173,11 +222,13 @@ export default class JsonSchemaFormElement extends __LitElement {
         case schema.type === 'boolean':
           return html`<input
             type="checkbox"
+            name=${fieldName}
             .checked=${value}
             id="${this.getIdFromPath(path)}"
             class=${`${this.cls('_values-checkbox')} ${
               this.formClasses ? 'form-checkbox' : ''
             }`}
+            autofocus=${schema.autofocus ?? nothing}
             @change=${(e) => {
               __set(this.values, path, e.target.checked);
               this._emitUpdate({
@@ -190,6 +241,7 @@ export default class JsonSchemaFormElement extends __LitElement {
         case schema.type === 'number':
           return html`<input
             type="number"
+            name=${fieldName}
             .value=${value}
             min=${schema.minimum}
             max=${schema.maximum}
@@ -197,6 +249,7 @@ export default class JsonSchemaFormElement extends __LitElement {
             class=${`${this.cls('_values-input')} ${
               this.formClasses ? 'form-input form-number' : ''
             }`}
+            autofocus=${schema.autofocus ?? nothing}
             @input=${(e: any) => {
               __set(this.values, path, parseFloat(e.target.value));
             }}

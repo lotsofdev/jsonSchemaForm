@@ -1,6 +1,6 @@
 {
   "name": "@lotsof/json-schema-form",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.0",
   "description": "Simple to use webcomponent to display a form based on a json schema.",
   "type": "module",
   "author": "Olivier Bossel <olivier.bossel@gmail.com> (https://coffeekraken.io)",
@@ -19,8 +19,8 @@
     "@editorjs/paragraph": "^2.11.6",
     "@editorjs/quote": "^2.6.0",
     "@editorjs/underline": "^1.1.0",
-    "@lotsof/lit-element": "^1.0.0",
-    "@lotsof/sugar": "^1.0.0",
+    "@lotsof/lit-element": "^1.0.0-alpha",
+    "@lotsof/sugar": "^1.0.0-alpha",
     "@types/json-schema": "^7.0.15",
     "json-schema-library": "^10.0.0-rc2",
     "lit": "^3.1.3",

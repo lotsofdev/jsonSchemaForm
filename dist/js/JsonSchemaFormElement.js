@@ -28,7 +28,7 @@ var _JsonSchemaFormElement_schema_accessor_storage, _JsonSchemaFormElement_value
 import __LitElement from '@lotsof/lit-element';
 import { Draft2019 } from 'json-schema-library';
 // import '../components/wysiwygWidget/wysiwygWidget.js';
-import { html } from 'lit';
+import { html, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
 import { literal, html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { __deepMap, __get, __set } from '@lotsof/sugar/object';
@@ -57,6 +57,11 @@ class JsonSchemaFormElement extends __LitElement {
         this._registeredWidgets = {};
         this._errorsByPath = {};
     }
+    get $form() {
+        var _a;
+        const $field = this.querySelector('input, select, textarea');
+        return (_a = $field === null || $field === void 0 ? void 0 : $field.form) !== null && _a !== void 0 ? _a : null;
+    }
     mount() {
         return __awaiter(this, void 0, void 0, function* () {
             // handle the widgets
@@ -65,6 +70,41 @@ class JsonSchemaFormElement extends __LitElement {
                     tag: 's-json-schema-form-wysiwyg-widget',
                 } }, this.widgets), JsonSchemaFormElement.widgets);
         });
+    }
+    update(changedProperties) {
+        super.update(changedProperties);
+        // handle the "-invalid" class on the form
+        if (this.$form) {
+            if (this.$form.checkValidity()) {
+                this.$form.classList.remove('-invalid');
+            }
+            else {
+                this.$form.classList.add('-invalid');
+            }
+        }
+    }
+    firstUpdated(_changedProperties) {
+        // handle form submit.
+        // this will prevent the form to be submitted if
+        // any field is invalid
+        this._handleFormSubmit();
+    }
+    _handleFormSubmit() {
+        const $form = this.$form;
+        if (!$form)
+            return;
+        // override the "checkValidity" method to check
+        // if there's any errors in the form
+        const originalCheck = $form.checkValidity;
+        $form.checkValidity = () => {
+            if (!originalCheck.call($form)) {
+                return false;
+            }
+            if (Object.keys(this._errorsByPath).length) {
+                return false;
+            }
+            return true;
+        };
     }
     _findInSchema(schema, path) {
         const foundSchema = path.reduce((acc, key) => {
@@ -92,9 +132,9 @@ class JsonSchemaFormElement extends __LitElement {
         if (!errors.length)
             return '';
         return html `
-      <ul class=${this.cls('_values-errors')}>
+      <ul class=${`${this.cls('_values-errors')} errors`}>
         ${errors.map((error) => html `
-            <li class=${this.cls('_values-error')}>
+            <li class=${`${this.cls('_values-error error')} error`}>
               ${error.message
             .replace('in `#`', '')
             .replace('at `#`', '')
@@ -105,13 +145,15 @@ class JsonSchemaFormElement extends __LitElement {
     `;
     }
     _renderComponentValueEditWidget(value, path) {
-        var _a;
+        var _a, _b, _c, _d, _e;
         // remove the numerical indexes in the path.
         // this is due to the fact that the schema is not
         // aware of the array indexes
         const pathWithoutIndexes = path.filter((p) => isNaN(parseInt(p)));
         // get the schema for the current path
         const schema = this._findInSchema(this.schema, pathWithoutIndexes);
+        // get the field name
+        const fieldName = path[path.length - 1];
         // handle default value
         if (value === null && schema.default !== undefined) {
             __set(this.values, path, schema.default);
@@ -132,7 +174,9 @@ class JsonSchemaFormElement extends __LitElement {
                 case schema.enum !== undefined:
                     return html `<select
               id="${this.getIdFromPath(path)}"
+              name=${fieldName}
               class=${`${this.cls('_values-select')} ${this.formClasses ? 'form-select' : ''}`}
+              autofocus=${(_a = schema.autofocus) !== null && _a !== void 0 ? _a : nothing}
               @change=${(e) => {
                         __set(this.values, path, e.target.value);
                         this._emitUpdate({
@@ -152,10 +196,12 @@ class JsonSchemaFormElement extends __LitElement {
                 case schema.type === 'string':
                     return html `<input
             type="text"
+            name=${fieldName}
             .value=${value !== null && value !== void 0 ? value : ''}
             id="${this.getIdFromPath(path)}"
             class=${`${this.cls('_values-input')} ${this.formClasses ? 'form-input' : ''}`}
-            placeholder=${(_a = schema.placeholder) !== null && _a !== void 0 ? _a : ''}
+            autofocus=${(_b = schema.autofocus) !== null && _b !== void 0 ? _b : nothing}
+            placeholder=${(_c = schema.placeholder) !== null && _c !== void 0 ? _c : ''}
             @input=${(e) => {
                         __set(this.values, path, e.target.value);
                     }}
@@ -170,9 +216,11 @@ class JsonSchemaFormElement extends __LitElement {
                 case schema.type === 'boolean':
                     return html `<input
             type="checkbox"
+            name=${fieldName}
             .checked=${value}
             id="${this.getIdFromPath(path)}"
             class=${`${this.cls('_values-checkbox')} ${this.formClasses ? 'form-checkbox' : ''}`}
+            autofocus=${(_d = schema.autofocus) !== null && _d !== void 0 ? _d : nothing}
             @change=${(e) => {
                         __set(this.values, path, e.target.checked);
                         this._emitUpdate({
@@ -185,11 +233,13 @@ class JsonSchemaFormElement extends __LitElement {
                 case schema.type === 'number':
                     return html `<input
             type="number"
+            name=${fieldName}
             .value=${value}
             min=${schema.minimum}
             max=${schema.maximum}
             id="${this.getIdFromPath(path)}"
             class=${`${this.cls('_values-input')} ${this.formClasses ? 'form-input form-number' : ''}`}
+            autofocus=${(_e = schema.autofocus) !== null && _e !== void 0 ? _e : nothing}
             @input=${(e) => {
                         __set(this.values, path, parseFloat(e.target.value));
                     }}

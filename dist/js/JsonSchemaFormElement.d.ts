@@ -1,4 +1,5 @@
 import __LitElement from '@lotsof/lit-element';
+import { PropertyValues } from 'lit';
 import '../../src/css/JsonSchemaFormElement.bare.css';
 import { TJsonSchemaFormWidget } from '../shared/JsonSchemaForm.types.js';
 export default class JsonSchemaFormElement extends __LitElement {
@@ -12,7 +13,11 @@ export default class JsonSchemaFormElement extends __LitElement {
     private _registeredWidgets;
     private _errorsByPath;
     constructor();
+    get $form(): HTMLFormElement | null;
     mount(): Promise<void>;
+    protected update(changedProperties: PropertyValues): void;
+    protected firstUpdated(_changedProperties: PropertyValues): void;
+    private _handleFormSubmit;
     private _findInSchema;
     private _validateValues;
     private _renderComponentValueErrors;
